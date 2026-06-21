@@ -4,22 +4,18 @@ import { createShip } from './ship.js';
 import { createPulsar } from './pulsar.js';
 import { createStars } from './stars.js';
 
-const scene =
-    new THREE.Scene();
+const scene = new THREE.Scene();
 
-const camera =
-    new THREE.PerspectiveCamera(
-        75,
-        window.innerWidth /
-        window.innerHeight,
-        0.1,
-        5000
-    );
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    5000
+);
 
-const renderer =
-    new THREE.WebGLRenderer({
-        antialias:true
-    });
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+});
 
 renderer.setSize(
     window.innerWidth,
@@ -30,155 +26,95 @@ document.body.appendChild(
     renderer.domElement
 );
 
-const ambient =
+scene.add(
     new THREE.AmbientLight(
         0xffffff,
-        0.5
-    );
-
-scene.add(ambient);
-
-const pointLight =
-    new THREE.PointLight(
-        0xaaddff,
-        30,
-        500
-    );
-
-scene.add(pointLight);
-
-const stars =
-    createStars();
-
-scene.add(stars);
-
-const ship =
-    createShip();
-
-ship.position.set(
-    0,
-    0,
-    0
+        1
+    )
 );
 
+const stars = createStars();
+scene.add(stars);
+
+const ship = createShip();
 scene.add(ship);
 
-const pulsar =
-    createPulsar();
+const pulsar = createPulsar();
 
 pulsar.position.set(
     0,
     0,
-    -300
+    -50
 );
 
 scene.add(pulsar);
 
-pointLight.position.copy(
+const light = new THREE.PointLight(
+    0xaaddff,
+    100,
+    500
+);
+
+light.position.copy(
     pulsar.position
 );
+
+scene.add(light);
 
 camera.position.set(
     0,
     3,
-    8
+    12
 );
 
 const keys = {};
 
-window.addEventListener(
-    "keydown",
-    e => keys[e.key.toLowerCase()] = true
-);
+window.addEventListener("keydown", e => {
+    keys[e.key.toLowerCase()] = true;
+});
 
-window.addEventListener(
-    "keyup",
-    e => keys[e.key.toLowerCase()] = false
-);
+window.addEventListener("keyup", e => {
+    keys[e.key.toLowerCase()] = false;
+});
 
 let speed = 0;
 
-function animate(){
+function animate() {
 
-    requestAnimationFrame(
-        animate
-    );
+    requestAnimationFrame(animate);
 
-    if(keys["w"]){
-
-        speed += 0.002;
-    }
-
-    if(keys["s"]){
-
-        speed -= 0.002;
-    }
+    if (keys["w"]) speed += 0.005;
+    if (keys["s"]) speed -= 0.005;
 
     speed *= 0.99;
 
-    if(keys["a"]){
+    if (keys["a"]) ship.rotation.y += 0.03;
+    if (keys["d"]) ship.rotation.y -= 0.03;
 
-        ship.rotation.y += 0.03;
-    }
+    const direction =
+        new THREE.Vector3(0, 0, -1);
 
-    if(keys["d"]){
-
-        ship.rotation.y -= 0.03;
-    }
-
-    const forward =
-        new THREE.Vector3(
-            0,
-            0,
-            -1
-        );
-
-    forward.applyQuaternion(
+    direction.applyQuaternion(
         ship.quaternion
     );
 
     ship.position.add(
-        forward.multiplyScalar(
-            speed
-        )
+        direction.multiplyScalar(speed)
     );
 
-    const cameraOffset =
+    camera.position.copy(ship.position);
+
+    camera.position.add(
         new THREE.Vector3(
             0,
             3,
-            8
-        );
-
-    cameraOffset.applyQuaternion(
-        ship.quaternion
+            12
+        )
     );
 
-    camera.position.copy(
-        ship.position
-    ).add(
-        cameraOffset
-    );
+    camera.lookAt(ship.position);
 
-    camera.lookAt(
-        ship.position
-    );
-
-    pulsar.rotation.y += 0.2;
-    pulsar.rotation.z += 0.05;
-
-    const distance =
-        ship.position.distanceTo(
-            pulsar.position
-        );
-
-    if(distance < 12){
-
-        document.getElementById(
-            "ui"
-        ).innerText =
-        "Entrando al púlsar...";
-    }
+    pulsar.rotation.y += 0.05;
 
     renderer.render(
         scene,
@@ -187,20 +123,3 @@ function animate(){
 }
 
 animate();
-
-window.addEventListener(
-    "resize",
-    () => {
-
-        camera.aspect =
-            window.innerWidth /
-            window.innerHeight;
-
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(
-            window.innerWidth,
-            window.innerHeight
-        );
-    }
-);
