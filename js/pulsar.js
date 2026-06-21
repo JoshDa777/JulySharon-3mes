@@ -69,7 +69,7 @@ const pulsar =
 pulsar.position.set(
     0,
     0,
-    -300
+    -50
 );
 
 scene.add(pulsar);
