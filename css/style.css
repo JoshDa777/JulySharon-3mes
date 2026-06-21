@@ -1,1 +1,19 @@
+body{
+    margin:0;
+    overflow:hidden;
+    background:black;
+    font-family:Arial, sans-serif;
+}
 
+canvas{
+    display:block;
+}
+
+#ui{
+    position:absolute;
+    top:20px;
+    left:20px;
+    color:white;
+    font-size:24px;
+    z-index:10;
+}
