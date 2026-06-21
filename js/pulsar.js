@@ -1,87 +1,206 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.179/build/three.module.js';
 
-export function createPulsar(){
+import { createShip } from './ship.js';
+import { createPulsar } from './pulsar.js';
+import { createStars } from './stars.js';
 
-    const group = new THREE.Group();
+const scene =
+    new THREE.Scene();
 
-    const starGeometry =
-        new THREE.SphereGeometry(4,64,64);
+const camera =
+    new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth /
+        window.innerHeight,
+        0.1,
+        5000
+    );
 
-    const starMaterial =
-        new THREE.MeshStandardMaterial({
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias:true
+    });
 
-            color:0xffffff,
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
 
-            emissive:0xaaddff,
+document.body.appendChild(
+    renderer.domElement
+);
 
-            emissiveIntensity:8
-        });
+const ambient =
+    new THREE.AmbientLight(
+        0xffffff,
+        0.5
+    );
 
-    const star =
-        new THREE.Mesh(
-            starGeometry,
-            starMaterial
+scene.add(ambient);
+
+const pointLight =
+    new THREE.PointLight(
+        0xaaddff,
+        30,
+        500
+    );
+
+scene.add(pointLight);
+
+const stars =
+    createStars();
+
+scene.add(stars);
+
+const ship =
+    createShip();
+
+ship.position.set(
+    0,
+    0,
+    0
+);
+
+scene.add(ship);
+
+const pulsar =
+    createPulsar();
+
+pulsar.position.set(
+    0,
+    0,
+    -300
+);
+
+scene.add(pulsar);
+
+pointLight.position.copy(
+    pulsar.position
+);
+
+camera.position.set(
+    0,
+    3,
+    8
+);
+
+const keys = {};
+
+window.addEventListener(
+    "keydown",
+    e => keys[e.key.toLowerCase()] = true
+);
+
+window.addEventListener(
+    "keyup",
+    e => keys[e.key.toLowerCase()] = false
+);
+
+let speed = 0;
+
+function animate(){
+
+    requestAnimationFrame(
+        animate
+    );
+
+    if(keys["w"]){
+
+        speed += 0.002;
+    }
+
+    if(keys["s"]){
+
+        speed -= 0.002;
+    }
+
+    speed *= 0.99;
+
+    if(keys["a"]){
+
+        ship.rotation.y += 0.03;
+    }
+
+    if(keys["d"]){
+
+        ship.rotation.y -= 0.03;
+    }
+
+    const forward =
+        new THREE.Vector3(
+            0,
+            0,
+            -1
         );
 
-    group.add(star);
+    forward.applyQuaternion(
+        ship.quaternion
+    );
 
-    const jetGeometry =
-        new THREE.CylinderGeometry(
-            0.3,
-            1.5,
-            80,
-            32
+    ship.position.add(
+        forward.multiplyScalar(
+            speed
+        )
+    );
+
+    const cameraOffset =
+        new THREE.Vector3(
+            0,
+            3,
+            8
         );
 
-    const jetMaterial =
-        new THREE.MeshBasicMaterial({
-            color:0x88ccff,
-            transparent:true,
-            opacity:0.8
-        });
+    cameraOffset.applyQuaternion(
+        ship.quaternion
+    );
 
-    const jetTop =
-        new THREE.Mesh(
-            jetGeometry,
-            jetMaterial
+    camera.position.copy(
+        ship.position
+    ).add(
+        cameraOffset
+    );
+
+    camera.lookAt(
+        ship.position
+    );
+
+    pulsar.rotation.y += 0.2;
+    pulsar.rotation.z += 0.05;
+
+    const distance =
+        ship.position.distanceTo(
+            pulsar.position
         );
 
-    jetTop.position.y = 40;
+    if(distance < 12){
 
-    const jetBottom =
-        new THREE.Mesh(
-            jetGeometry,
-            jetMaterial
-        );
+        document.getElementById(
+            "ui"
+        ).innerText =
+        "Entrando al púlsar...";
+    }
 
-    jetBottom.position.y = -40;
-
-    group.add(jetTop);
-    group.add(jetBottom);
-
-    const ringGeometry =
-        new THREE.TorusGeometry(
-            7,
-            0.3,
-            16,
-            100
-        );
-
-    const ringMaterial =
-        new THREE.MeshBasicMaterial({
-            color:0x66bbff
-        });
-
-    const ring =
-        new THREE.Mesh(
-            ringGeometry,
-            ringMaterial
-        );
-
-    ring.rotation.x =
-        Math.PI / 2;
-
-    group.add(ring);
-
-    return group;
+    renderer.render(
+        scene,
+        camera
+    );
 }
+
+animate();
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+    }
+);
